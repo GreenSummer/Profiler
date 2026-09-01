@@ -1,0 +1,206 @@
+[
+  {
+    "label": "baseline",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 0
+  },
+  {
+    "label": "rob96",
+    "params": {
+      "rob_entries": 96,
+      "lsq_entries": 48,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 1
+  },
+  {
+    "label": "rob128",
+    "params": {
+      "rob_entries": 128,
+      "lsq_entries": 64,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 2
+  },
+  {
+    "label": "rob192",
+    "params": {
+      "rob_entries": 192,
+      "lsq_entries": 96,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 3
+  },
+  {
+    "label": "issue6",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 6,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 4
+  },
+  {
+    "label": "issue8",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 8,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 5
+  },
+  {
+    "label": "l1d64",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 4,
+      "l1d_kb": 64,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 6
+  },
+  {
+    "label": "l2_1m",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 1024,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 7
+  },
+  {
+    "label": "btac2k",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 2048,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 8
+  },
+  {
+    "label": "nocg",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": false,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 9
+  },
+  {
+    "label": "leaky",
+    "params": {
+      "rob_entries": 64,
+      "lsq_entries": 32,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "lvt_heavy"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 10
+  },
+  {
+    "label": "rob256",
+    "params": {
+      "rob_entries": 256,
+      "lsq_entries": 128,
+      "issue_width": 4,
+      "l1d_kb": 32,
+      "l1i_kb": 32,
+      "l2_kb": 512,
+      "btac_entries": 512,
+      "clock_gating": true,
+      "vt_mix": "balanced"
+    },
+    "corner": "tt_0p80v_25c",
+    "stage": "rtla_predict",
+    "order": 11
+  }
+]

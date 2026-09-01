@@ -1,0 +1,30 @@
+# ---- Python ----
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- SQLite: the demo DB is tracked on purpose; only transient WAL sidecars ignored ----
+*.db-wal
+*.db-shm
+
+# ---- Node / frontend ----
+node_modules/
+frontend/dist/
+.npm-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- macOS ----
+.DS_Store
+
+# ---- IDE / editor ----
+.qoder/
+.idea/
+.vscode/
+*.swp

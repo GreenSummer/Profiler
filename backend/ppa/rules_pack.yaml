@@ -1,0 +1,118 @@
+# PPA diagnosis rule pack (plan section 6.4).
+# severity: critical | high | medium | low | info
+# Designers tune thresholds here without touching code; adding a new rule
+# TYPE requires a matching evaluator in ppa/rules.py.
+rules:
+  # ------------------------------------------------ timing
+  - id: TIM_WNS_NEG
+    category: timing
+    severity: high
+    title: "Setup WNS is {wns:.3f} ns (violating)"
+    params: {scale_high_at: -0.10}
+
+  - id: TIM_NVE_HIGH
+    category: timing
+    severity: medium
+    title: "{nve} violating endpoints (TNS {tns:.1f} ns)"
+    params: {nve_threshold: 50}
+
+  - id: TIM_MOD_DOMINATES
+    category: timing
+    severity: medium
+    title: "Module {module} owns {share:.0%} of top timing paths"
+    params: {share_threshold: 0.30}
+
+  - id: TIM_DEEP_LOGIC
+    category: timing
+    severity: medium
+    title: "Critical path logic depth {depth} exceeds {threshold}"
+    params: {threshold: 25}
+
+  # ------------------------------------------------ area
+  - id: AREA_OVER_BUDGET
+    category: area
+    severity: high
+    title: "Total area {area_mm2:.3f} mm^2 exceeds budget {budget_mm2:.3f} mm^2"
+
+  - id: AREA_SEQ_RATIO
+    category: area
+    severity: low
+    title: "Sequential area is {ratio:.0%} of total (flop-heavy)"
+    params: {threshold: 0.50}
+
+  - id: AREA_MOD_GROWTH
+    category: area
+    severity: medium
+    title: "Module {module} grew {pct:+.1%} vs baseline"
+    params: {threshold: 0.05}
+
+  # ------------------------------------------------ power
+  - id: PWR_LEAK_SHARE
+    category: power
+    severity: high
+    title: "Leakage is {share:.0%} of total power (VT mix too aggressive?)"
+    params: {threshold: 0.25}
+
+  - id: PWR_CLOCK_SHARE
+    category: power
+    severity: medium
+    title: "Clock network consumes {share:.0%} of total power"
+    params: {threshold: 0.30}
+
+  - id: PWR_CG_LOW
+    category: power
+    severity: medium
+    title: "Clock gating efficiency only {eff:.0f}%"
+    params: {threshold: 70}
+
+  - id: PWR_DENSITY_HIGH
+    category: power
+    severity: medium
+    title: "Module {module} power density {density:.2f} mW/mm^2 (IR/thermal risk)"
+    params: {threshold_mw_um2: 0.00045}   # mW per um^2
+
+  - id: PWR_OVER_BUDGET
+    category: power
+    severity: high
+    title: "Total power {power_mw:.1f} mW exceeds budget {budget_mw:.1f} mW"
+
+  # ------------------------------------------------ performance
+  - id: PERF_BENCH_REGRESS
+    category: performance
+    severity: medium
+    title: "Benchmark {benchmark} regressed {pct:.1%} vs baseline"
+    params: {threshold: 0.01}
+
+  - id: PERF_ISOLATED_OUTLIER
+    category: performance
+    severity: info
+    title: "Benchmark {benchmark} is a lone outlier ({pct:+.1%} while geomean {gm:+.1%})"
+
+  # ------------------------------------------------ cross-domain (thesis 1)
+  - id: XDOM_NET_SCORE_DOWN
+    category: cross_domain
+    severity: high
+    title: "IPC up {ipc:+.1%} but net SPEC score down {score:+.1%}: frequency loss dominates"
+
+  - id: XDOM_AREA_ROI_LOW
+    category: cross_domain
+    severity: medium
+    title: "Area ROI {roi:.2f}: {area_pct:+.1%} area bought only {score_pct:+.1%} score"
+    params: {threshold: 0.3}
+
+  - id: XDOM_POWER_ROI_LOW
+    category: cross_domain
+    severity: medium
+    title: "Power ROI {roi:.2f}: {power_pct:+.1%} power bought only {score_pct:+.1%} score"
+    params: {threshold: 0.3}
+
+  # ------------------------------------------------ data quality
+  - id: DQ_MISSING_REPORT
+    category: data_quality
+    severity: high
+    title: "Run is missing {kind} report"
+
+  - id: DQ_PARSE_WARNINGS
+    category: data_quality
+    severity: low
+    title: "{kind} report parsed with {n} warnings"

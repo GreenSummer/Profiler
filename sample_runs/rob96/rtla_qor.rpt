@@ -1,0 +1,16 @@
+************************************************************************
+Report : report_qor
+Design : rv_ooc_core
+Version: T-2022.03-SP4
+************************************************************************
+Metric                                  Value
+---
+Cell Area (um^2)                        185180.0
+Sequential Area (um^2)                   48146.8
+Macro Area (um^2)                        29628.8
+Buffer/Inverter Area (um^2)              13888.5
+Cell Count                                148144
+Critical Path Logic Levels                    31
+WNS (ns)                                   0.050
+TNS (ns)                                    0.00
+Estimated Fmax (MHz)                       869.4

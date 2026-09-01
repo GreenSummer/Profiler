@@ -1,0 +1,41 @@
+************************************************************************
+Report : report_power -analysis_mode vectorless -hierarchy
+Design : rv_ooc_core
+Version: P-2019.06-SP1
+Supply : 0.80 V
+Default toggle rate: 0.15
+Clock gating efficiency: 78.0 %
+************************************************************************
+Power by category (mW)
+---
+Combinational       9.721
+Register            6.033
+Clock               6.511
+Memory              5.363
+
+Hierarchical power (mW)
+---
+Instance                          Internal  Switching   Leakage     Total
+core_top                              14.567     12.918     6.033    33.519
+  core_top.u_ifu                         2.903      2.574     1.202     6.679
+    core_top.u_ifu.u_bp                    0.200      0.177     0.063     0.440
+    core_top.u_ifu.u_dec                   1.388      1.231     0.575     3.194
+    core_top.u_ifu.u_l1i                   1.130      1.002     0.913     3.045
+  core_top.u_ex                          4.447      3.944     1.842    10.232
+    core_top.u_ex.gen_alu[0]               0.378      0.335     0.156     0.869
+      core_top.u_ex.gen_alu[0].u_alu         0.378      0.335     0.156     0.869
+    core_top.u_ex.gen_alu[1]               0.378      0.335     0.156     0.869
+      core_top.u_ex.gen_alu[1].u_alu         0.378      0.335     0.156     0.869
+    core_top.u_ex.u_rob                    1.633      1.448     0.518     3.599
+    core_top.u_ex.u_lsq                    0.804      0.713     0.255     1.771
+    core_top.u_ex.u_sched                  1.357      1.204     0.562     3.123
+  core_top.u_lsu                         2.946      2.612     1.220     6.778
+    core_top.u_lsu.u_dtlb                  0.694      0.615     0.287     1.597
+    core_top.u_lsu.u_wb                    0.848      0.752     0.351     1.952
+    core_top.u_lsu.u_l1d                   1.198      1.062     0.969     3.229
+  core_top.u_l2                          2.838      2.517     1.175     6.530
+    core_top.u_l2.u_adapt                  0.432      0.383     0.179     0.994
+    core_top.u_l2.u_l2mem                  2.054      1.821     1.661     5.536
+  core_top.u_csr                         0.231      0.205     0.096     0.532
+  core_top.u_clk                         1.203      1.067     0.498     2.768
+Total                                 14.567     12.918     6.033    33.519

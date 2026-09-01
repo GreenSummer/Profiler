@@ -1,0 +1,11 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlmodel==0.0.22
+pydantic==2.10.4
+pydantic-settings==2.7.0
+PyYAML==6.0.2
+httpx==0.28.1
+typer==0.15.1
+rich==13.9.4
+click==8.1.8  # typer 0.15.x breaks with click>=8.2 (make_metavar signature)
+pytest==8.3.4
