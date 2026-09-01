@@ -274,13 +274,97 @@ fogs = zebu ±2 %. All share the same planted IPC events, so model gaps are
 visible but trends agree.
 
 ### 6.5 AI assistant (`ppa/ai/`)
-On-prem only: an OpenAI-compatible endpoint (Ollama or vLLM) is probed at
-startup. If available **and** the model is large enough (`ai_min_model_b`), the
-agent runs a bounded tool loop (`ai_max_tool_rounds` = 6) over read-only tools
-(series, change points, findings, correlations, search…) and answers with
-citations. Otherwise it falls back to a **deterministic offline pattern
-matcher** (intent → view proposal + content assembled directly from the DB),
-so the assistant always answers — flagged `offline: true`.
+
+The assistant is built around a **trust contract**, enforced structurally in
+code rather than by prompting alone:
+
+1. the model can only *select tools*, never compute — every number in an answer
+   comes verbatim from deterministic Python output;
+2. citations travel with each tool call and are returned alongside the answer;
+3. refusal ("I don't have that data") is preferred over guessing.
+
+**LLM client (`llm.py`).** A thin OpenAI-compatible `httpx` wrapper
+(`/chat/completions`, non-streaming) pointed at an on-prem endpoint — Ollama by
+default (`http://localhost:11434/v1`, model `qwen2.5:32b-instruct`), vLLM or
+any compatible server via `PPA_AI_BASE_URL` / `PPA_AI_MODEL`. `probe()` checks
+reachability and resolves the configured model against the installed ones; the
+result is exposed at `GET /api/ai/status`. No cloud calls exist in the codebase.
+
+**Tool layer (`tools.py`).** 14 read-only tools, each a Pydantic-validated
+function over the analysis/versioning layer with row limits (`_clip`):
+`list_runs`, `get_context_pack`, `compare_runs`, `breakdown` (area/power tree),
+`timing_paths`, `perf_scores`, `pareto`, `get_findings`, `get_version_series`,
+`get_change_points`, `get_correlations`, `search_signals`, `trace_to_source`,
+and `propose_view` (returns a `view_proposal` the UI turns into a one-click
+navigation jump). `execute_tool()` returns `(result_json, citations)` — every
+citation names the run label and source ("context pack", "rule engine", …).
+The model never generates SQL and never does arithmetic.
+
+**What the context is (`context_pack.py`).** Context packs are compact,
+LLM-friendly digests precomputed by deterministic Python — the model's window
+into the DB, sized for small local models:
+
+- `build_run_pack(run_id)` — one run: identity (label, stage, corner, config,
+  version + change note + RTL sha), all **figures of merit**, FOM deltas vs
+  baseline (cur/base/pct), **domain summaries and budgets** (from the
+  scorecard), top-10 **modules by area/power share + criticality** (hotspot),
+  5 **worst timing paths** (slack, module, depth), **per-benchmark IPC with
+  deltas**, top-10 **open findings**, and an embedded `version_context`:
+  the 16-version headline series (score/area/power/WNS + change notes), the
+  8 strongest **change points** (magnitude-sorted, with attribution) and the
+  6 strongest **perf×PPA correlations** — so even a single tool call can
+  answer version-axis questions.
+- `build_comparison_pack(run_ids)` — config diff, net-score **decomposition**
+  (IPC vs frequency), key FOM deltas (score, area, power, ROIs), top-5 area
+  and power **waterfall** contributors per pair, plus a `version_pair` block
+  (from/to version, change note, detected change events between the two runs)
+  and the run packs of both sides.
+- **UI context** — the frontend sends `run_context` (`{view, run_id}`) with
+  every chat request; the agent injects it as a second system message
+  ("user is looking at this", truncated to 2 KB) so answers are grounded in
+  what's on screen.
+
+**Agent loop (`agent.py`).** `chat()` first probes the endpoint. If
+unreachable — or the resolved model is below `ai_min_model_b` (4B, parsed from
+names like `qwen3:0.6b`) — it answers via the offline analyst immediately
+instead of burning minutes on failing rounds. Otherwise it runs a bounded tool
+loop (`ai_max_tool_rounds` = 6) with graduated guardrails:
+
+- the first round uses `tool_choice="required"` — small models otherwise
+  narrate from memory instead of fetching data;
+- models under 8B get a **compact tool set** (`get_context_pack` + `list_runs`)
+  since mid-size local models handle few tools better than many, and the run
+  pack already embeds findings, paths and per-benchmark data;
+- a content-only reply is accepted **only after** at least one tool call;
+  otherwise the agent nudges up to twice ("call get_context_pack now — do not
+  answer from memory");
+- tool errors are fed back to the model as `{"error": …}` results;
+- at loop exhaustion it forces a final answer ("use only the tool results
+  above"); if the model never called a tool, it falls back to the offline
+  analyst (`reason="no_tools"`).
+
+The system prompt encodes the trust rules plus domain knowledge (score =
+SPECint/GHz × Fmax, WNS/TNS/NVE definitions, area/power splits, change-point
+method taxonomy, ROI heuristics, vectorless-power caveat).
+
+**Offline deterministic analyst.** `offline_answer()` is a pattern matcher over
+the question text that assembles cited answers directly from the DB: version
+questions ("what changed in/after vX", trends, "why did the power jump" →
+metric-word detection + change-point listing), correlation questions,
+signal-search questions (regex-extracts the query term), run comparisons
+(config diff + decomposition), findings questions, and a default run overview
+from the context pack. Each pattern returns markdown content, citations, a
+`view_proposal`, and a mode note explaining why the deterministic path was
+taken (offline / small_model / no_tools) — so the assistant always answers,
+flagged `offline: true`.
+
+**API + persistence + UI.** `POST /api/ai/chat` takes `{messages,
+run_context}` and returns `{content, citations, tool_trace, offline,
+view_proposal}`; sessions and messages persist in `ChatSession` /
+`ChatMessage` (including the tool trace and citations as JSON). The frontend
+`ChatPanel` renders the answer, turns `view_proposal` into a navigation button
+(driven by the same zustand store/URL-hash mechanism as everything else) and
+shows citations and the offline-mode note.
 
 ---
 
