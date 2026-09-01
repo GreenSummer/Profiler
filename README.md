@@ -8,6 +8,9 @@ without ever inventing a number. v2 adds the version axis: statistical change-po
 across an RTL version series, perf×PPA correlations, signal search, and plot-to-raw-data
 tracing.
 
+**Architecture, DB schema and tech stack:** see [`docs/architecture.md`](docs/architecture.md);
+design documents live in [`docs/design/`](docs/design/).
+
 ## Why it exists
 
 Three things spreadsheets and generic BI tools cannot do:
