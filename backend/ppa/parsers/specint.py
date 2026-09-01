@@ -21,7 +21,7 @@ BENCHMARKS = [
 def parse_specint(text: str) -> PerfReport:
     rep = PerfReport()
     in_table = False
-    for line in text.splitlines():
+    for lineno, line in enumerate(text.splitlines(), 1):
         s = line.rstrip()
         if s.startswith("Method"):
             rep.method = s.split(":", 1)[1].strip()
@@ -54,6 +54,7 @@ def parse_specint(text: str) -> PerfReport:
                 l1d_mpki=nums[5] or None,
                 l2_mpki=nums[6] or None,
                 br_mispred_pct=nums[7] or None,
+                src_line=lineno,
             )
             rep.rows.append(row)
         elif toks[0].lower() == "geomean":

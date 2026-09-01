@@ -76,7 +76,7 @@ export function IngestAdmin() {
 
       <Card title="CLI quickstart">
         <pre className="overflow-x-auto rounded bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-slate-300">
-{`# one-shot demo data (12-run config sweep) + ingest + golden baseline
+{`# one-shot demo data (16-version RTL series) + ingest + golden baseline
 cd backend && ../.venv/bin/python -m ppa.cli demo
 
 # ingest your own reports (manifest.json listing the 5 report files)

@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useApp } from "../store";
 import { Card, Delta, Empty, Table, fmt, shortModule } from "../components/ui";
 import { EChart } from "../components/EChart";
+import { SourceBtn } from "../components/TraceDrawer";
 
 export function PowerExplorer() {
   const runId = useApp((s) => s.runId);
@@ -75,7 +76,7 @@ export function PowerExplorer() {
       </Card>
 
       <Card title="Module power table (level 2)">
-        <Table head={["Module", "Total mW", "Share", "Internal", "Switching", "Leakage", "Leak%", "Density mW/mm²", "Δ vs base"]}>
+        <Table head={["Module", "Total mW", "Share", "Internal", "Switching", "Leakage", "Leak%", "Density mW/mm²", "Δ vs base", ""]}>
           {level2.map((r) => (
             <tr key={r.scope_path}>
               <td className="px-2 py-1 font-medium">{shortModule(r.scope_path)}</td>
@@ -87,6 +88,9 @@ export function PowerExplorer() {
               <td className="px-2 py-1 font-mono">{fmt(r.leak_share * 100, 0)}%</td>
               <td className="px-2 py-1 font-mono">{r.power_density_mw_um2 ? fmt(r.power_density_mw_um2 * 1e6, 0) : "—"}</td>
               <td className="px-2 py-1"><Delta pct={r.delta_vs_baseline_pct !== null ? r.delta_vs_baseline_pct * 100 : null} invert /></td>
+              <td className="px-2 py-1 text-right">
+                <SourceBtn target={{ run_id: runId!, kind: "power", scope_path: r.scope_path }} />
+              </td>
             </tr>
           ))}
         </Table>

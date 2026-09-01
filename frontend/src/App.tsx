@@ -5,6 +5,8 @@ import { RunExplorer } from "./views/RunExplorer";
 import { Scorecard } from "./views/Scorecard";
 import { Compare } from "./views/Compare";
 import { DesignSpace } from "./views/DesignSpace";
+import { VersionTimeline } from "./views/VersionTimeline";
+import { Correlations } from "./views/Correlations";
 import { AreaExplorer } from "./views/AreaExplorer";
 import { PowerExplorer } from "./views/PowerExplorer";
 import { TimingExplorer } from "./views/TimingExplorer";
@@ -14,12 +16,16 @@ import { FindingsView } from "./views/FindingsView";
 import { IngestAdmin } from "./views/IngestAdmin";
 import { ChatPanel } from "./ai/ChatPanel";
 import { aiBadge } from "./ai/badge";
+import { GlobalSearch } from "./components/GlobalSearch";
+import { TraceDrawer } from "./components/TraceDrawer";
 
 const NAV: { id: ViewId; label: string; group: string }[] = [
+  { id: "timeline", label: "Version Timeline", group: "Overview" },
   { id: "run-explorer", label: "Runs", group: "Overview" },
   { id: "scorecard", label: "Scorecard", group: "Overview" },
   { id: "compare", label: "Compare", group: "Overview" },
   { id: "design-space", label: "Design Space", group: "Insight" },
+  { id: "correlations", label: "Correlations", group: "Insight" },
   { id: "hotspot", label: "Hotspot Matrix", group: "Insight" },
   { id: "area", label: "Area", group: "Domain" },
   { id: "power", label: "Power", group: "Domain" },
@@ -67,6 +73,9 @@ function TopBar() {
             compare: {compareIds.length} runs
           </span>
         )}
+      </div>
+      <div className="ml-2 flex items-center gap-3">
+        <GlobalSearch />
       </div>
       <div className="ml-auto flex items-center gap-3">
         <span
@@ -116,9 +125,11 @@ function Sidebar() {
 function CurrentView() {
   const view = useApp((s) => s.view);
   switch (view) {
+    case "timeline": return <VersionTimeline />;
     case "scorecard": return <Scorecard />;
     case "compare": return <Compare />;
     case "design-space": return <DesignSpace />;
+    case "correlations": return <Correlations />;
     case "area": return <AreaExplorer />;
     case "power": return <PowerExplorer />;
     case "timing": return <TimingExplorer />;
@@ -146,6 +157,7 @@ export default function App() {
           </aside>
         )}
       </div>
+      <TraceDrawer />
     </div>
   );
 }

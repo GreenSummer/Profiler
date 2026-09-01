@@ -14,10 +14,11 @@ interface Msg {
 }
 
 const SUGGESTIONS = [
+  "What changed in v0.5 and why did area jump?",
+  "Why did WNS collapse at v0.7?",
+  "How does power correlate with score across versions?",
+  "Show signals matching mac",
   "Give me an overview of the current run",
-  "Compare the current run against the baseline",
-  "What are the most severe findings right now?",
-  "Which modules dominate area and power?",
 ];
 
 export function ChatPanel({ context }: { context: () => unknown }) {
@@ -92,8 +93,9 @@ export function ChatPanel({ context }: { context: () => unknown }) {
         {messages.length === 0 && (
           <div className="space-y-2">
             <p className="text-xs text-slate-500">
-              Ask about PPA data in the selected run. Every number in the answer is computed by the
-              analysis engine and cited — the model never does arithmetic itself.
+              Ask about PPA across the version series or the selected run. Every number in the
+              answer is computed by the analysis engine and cited — the model never does
+              arithmetic itself.
             </p>
             {SUGGESTIONS.map((s) => (
               <button key={s} onClick={() => void send(s)}
@@ -170,7 +172,7 @@ export function ChatPanel({ context }: { context: () => unknown }) {
               }
             }}
             rows={2}
-            placeholder="ask about area, power, timing, performance…"
+            placeholder="ask about versions, changes, correlations, signals…"
             className="min-h-[44px] flex-1 resize-none rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:border-violet-500/60 focus:outline-none"
           />
           <button

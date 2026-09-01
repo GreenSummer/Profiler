@@ -38,17 +38,21 @@ class RunFacts:
         self.paths = session.exec(select(TimingPath).where(TimingPath.run_id == run_id)).all()
         self.reports = session.exec(select(RawReport).where(RawReport.run_id == run_id)).all()
         self.project = None
+        self.model = "synth"
         self.config_name = ""
         self.config_params = {}
         if self.run:
             design = session.get(Design, self.run.design_id)
+            self.model = design.model if design and design.model else "synth"
             self.project = session.get(Project, design.project_id) if design else None
             cfg = session.get(Config, self.run.config_id)
             self.config_name = cfg.name if cfg else ""
             self.config_params = cfg.params_json if cfg else {}
-        # baseline context
+        # baseline context (synthesis series only: perf-model runs are
+        # reference series, and comparing them against the synth golden
+        # baseline would mix systematic model bias into regression rules)
         self.baseline_run_id: int | None = None
-        if self.project:
+        if self.project and self.model == "synth":
             bl = session.exec(select(Baseline).where(Baseline.project_id == self.project.id)).first()
             if bl and bl.run_id != run_id:
                 self.baseline_run_id = bl.run_id
@@ -267,7 +271,9 @@ def _roi_check(f: RunFacts, p: dict, metric_key: str, label: str) -> list[tuple[
 
 
 def _ev_dq_missing(f: RunFacts, p: dict) -> list[tuple[str, dict, dict]]:
-    kinds = {"rtla_area", "rtla_timing", "rtla_qor", "primepower", "specint"}
+    # perf-model runs legitimately carry only a specint report
+    kinds = ({"rtla_area", "rtla_timing", "rtla_qor", "primepower", "specint"}
+             if f.model == "synth" else {"specint"})
     have = {r.kind for r in f.reports}
     out = []
     for k in sorted(kinds - have):

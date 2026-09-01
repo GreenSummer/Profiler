@@ -1,15 +1,17 @@
-"""FastAPI application: view APIs (V1-V11) + AI endpoints + static frontend."""
+"""FastAPI application: view APIs (V1-V11) + version analysis (v2) + AI
+endpoints + static frontend."""
 from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlmodel import Session
 
 from . import analysis
+from . import versioning
 from .ai import llm
 from .ai.agent import chat as ai_chat
 from .config import settings
@@ -160,6 +162,72 @@ def ingest_status(s: Session = Depends(session_dep)):
 def get_rules():
     from .rules import load_rules
     return load_rules()
+
+
+# ---------------------------------------------------------------- v2 version analysis
+
+@app.get("/api/overview")
+def overview(s: Session = Depends(session_dep)):
+    """Release overview board payload: geomean/perf-area trends across the
+    provenance series, benchmark trends, area stack, timing, PPA board."""
+    return versioning.overview_board(s)
+
+
+@app.get("/api/version-drill")
+def version_drill(version: str = Query(...), s: Session = Depends(session_dep)):
+    """Module/signal drill-down for one synthesis version."""
+    return versioning.version_drill(s, version)
+
+
+@app.get("/api/version-compare")
+def version_compare(versions: str, s: Session = Depends(session_dep)):
+    """Module area/power + IPC + signal slack matrices across versions."""
+    vs = [v.strip() for v in versions.split(",") if v.strip()]
+    if len(vs) < 2:
+        raise HTTPException(400, "versions must list at least two versions")
+    return versioning.version_compare_multi(s, vs)
+
+
+@app.get("/api/versions")
+def versions(s: Session = Depends(session_dep)):
+    """Ordered version series with headline metrics and change notes."""
+    return versioning.version_series(s)
+
+
+@app.get("/api/change-points")
+def change_points(s: Session = Depends(session_dep)):
+    """Persisted change-point detection results (ChangeEvents)."""
+    return versioning.change_points(s)
+
+
+@app.get("/api/correlations")
+def get_correlations(s: Session = Depends(session_dep)):
+    """Perf x PPA correlations across the version series."""
+    return versioning.correlations(s)
+
+
+@app.get("/api/search")
+def search(q: str = Query(..., min_length=2),
+           s: Session = Depends(session_dep)):
+    """Global search: modules, timing signals (slack history), report text."""
+    return versioning.signal_search(s, q)
+
+
+@app.get("/api/trace")
+def trace(run_id: int, kind: str, scope_path: str | None = None,
+          path_id: int | None = None, benchmark: str | None = None,
+          line: int | None = None,
+          s: Session = Depends(session_dep)):
+    """Raw report lines backing one plotted value (src_line provenance)."""
+    try:
+        out = versioning.trace_to_source(s, run_id, kind, scope_path=scope_path,
+                                         path_id=path_id, benchmark=benchmark,
+                                         line=line)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not out.get("found"):
+        raise HTTPException(404, out.get("error", "row or report not found"))
+    return out
 
 
 # ---------------------------------------------------------------- AI

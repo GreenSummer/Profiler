@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "../api";
 import { useApp } from "../store";
 import { Card, Delta, Table, fmt } from "../components/ui";
+import { OverviewBoard } from "./OverviewBoard";
 
 const COLS: { key: string; label: string; digits?: number; invert?: boolean }[] = [
   { key: "specint_score", label: "SPECint score", digits: 2 },
@@ -103,6 +104,7 @@ export function RunExplorer() {
         Tip: radio button sets the baseline for all deltas · ±cmp builds the comparison tray ·
         SPECint score = SPECint/GHz × Fmax — the net number a frequency/IPC trade is judged on.
       </p>
+      <OverviewBoard />
     </div>
   );
 }

@@ -3,6 +3,9 @@ export interface RunSummary {
   label: string;
   stage: string;
   started_at: string;
+  version?: string;
+  model?: string;
+  change_note?: string;
   config: Record<string, number | boolean | string>;
   corner: string;
   fom: Record<string, number | string>;
@@ -128,4 +131,129 @@ export interface ChatResult {
   tool_trace: { tool: string; args: unknown }[];
   offline: boolean;
   view_proposal: { view: string; run_id?: number; run_ids?: number[] } | null;
+}
+
+// ---- v2: version-centric analysis ----
+
+export interface VersionSeriesPoint {
+  version: string;
+  run_id: number;
+  label: string;
+  date: string;
+  sha: string;
+  change_note: string;
+  stage: string;
+  metrics: Record<string, number | null>;
+}
+
+export interface VersionSeries {
+  project_id: number | null;
+  series: VersionSeriesPoint[];
+}
+
+export interface ChangePointEvent {
+  id: number;
+  from_run_id: number;
+  to_run_id: number;
+  from_version: string;
+  to_version: string;
+  metric_key: string;
+  scope_path: string | null;
+  /** fraction for most metrics (0.08 = +8%); absolute delta for wns_ns and clock_gating_eff */
+  delta_pct: number;
+  /** robust z (magnitude) of the change */
+  magnitude: number;
+  method: string;
+  severity: string;
+  note: string;
+}
+
+export interface CorrelationsData {
+  pairs: { perf: string; ppa: string; r: number; n: number }[];
+  modules: { module: string; metric: string; r: number; n: number }[];
+}
+
+export interface SearchResults {
+  query: string;
+  modules: { scope_path: string; run_id: number }[];
+  signals: {
+    startpoint: string;
+    endpoint: string;
+    module: string;
+    history: { run_id: number; version: string; slack_ns: number; path_id: number }[];
+  }[];
+  text: { run_id: number; version: string; kind: string; file: string; line: number; text: string }[];
+}
+
+export interface TraceTargetInfo {
+  kind: string;
+  scope_path?: string;
+  value?: number;
+  path_id?: number;
+  startpoint?: string;
+  endpoint?: string;
+  slack_ns?: number;
+  benchmark?: string;
+  ipc?: number;
+  line?: number;
+}
+
+export interface TraceResult {
+  found: boolean;
+  run_id: number;
+  kind: string;
+  target?: TraceTargetInfo;
+  report?: { kind: string; file: string; sha256: string; parser_version: string; parse_status: string };
+  src_line?: number;
+  lines?: { no: number; text: string; hit: boolean }[];
+  error?: string;
+}
+
+// ---- v3: release overview board + drill-down/compare ----
+
+export interface OverviewBoardRow {
+  max_logic_levels: number | null;
+  gated_pct: number | null;
+  core_area_um2: number | null;
+  die_area_um2: number | null;
+  comb_share: number | null;
+  util_proxy: number | null;
+  congestion_overflow: number | null;
+}
+
+export interface OverviewData {
+  project_id: number;
+  versions: string[];
+  models: string[];                       // gem5 | slice | zebu | fogs
+  benchmarks_names: string[];
+  area_budget_mm2: number;
+  target_geomean: number;
+  target_eff: number;
+  geomean: Record<string, (number | null)[]>;   // model (incl. synth) -> per version
+  perf_per_area: (number | null)[];             // synth score/mm2
+  benchmarks: Record<string, Record<string, number[]>>;  // benchmark -> model -> ratio
+  ipc: Record<string, Record<string, number[]>>;         // benchmark -> model -> ipc
+  area_breakdown: { categories: string[]; values: Record<string, number[]> };
+  timing: { wns: (number | null)[]; tns: (number | null)[]; nve: number[] };
+  board: OverviewBoardRow[];
+}
+
+export interface VersionDrill {
+  version: string;
+  found: boolean;
+  run_id?: number;
+  sha?: string;
+  date?: string;
+  change_note?: string;
+  events?: ChangePointEvent[];
+  modules?: { scope_path: string; area_um2: number; power_mw: number | null; area_delta_pct: number | null; power_delta_pct: number | null }[];
+  signals?: { path_id: number; startpoint: string; endpoint: string; slack_ns: number; logic_depth: number; module: string }[];
+}
+
+export interface VersionCompare {
+  versions: string[];
+  run_ids: number[];
+  modules: { scope_path: string; area_mm2: (number | null)[]; power_mw: (number | null)[]; area_delta_pct: (number | null)[]; power_delta_pct: (number | null)[] }[];
+  benchmarks: { benchmark: string; ipc: (number | null)[]; ipc_delta_pct: (number | null)[] }[];
+  signals: { startpoint: string; endpoint: string; module: string; path_ids: number[]; slacks: number[]; worst: number }[];
 }

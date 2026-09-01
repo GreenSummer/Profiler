@@ -1,6 +1,8 @@
 import type {
-  AreaRowX, ChatResult, Comparison, DesignSpacePoint, Finding, HotspotRow,
-  PerfExplorerX, PowerRowX, RunSummary, Scorecard, TimingExplorerX,
+  AreaRowX, ChangePointEvent, ChatResult, Comparison, CorrelationsData,
+  DesignSpacePoint, Finding, HotspotRow, OverviewData, PerfExplorerX,
+  PowerRowX, RunSummary, Scorecard, SearchResults, TimingExplorerX,
+  TraceResult, VersionCompare, VersionDrill, VersionSeries,
 } from "./types";
 import type { AiStatus } from "./ai/badge";
 
@@ -42,6 +44,24 @@ export const api = {
   aiStatus: () => get<AiStatus>("/ai/status"),
   aiChat: (messages: { role: string; content: string }[], runContext: unknown) =>
     post<ChatResult>("/ai/chat", { messages, run_context: runContext }),
+  // ---- v2: version-centric analysis ----
+  versions: () => get<VersionSeries>("/versions"),
+  changePoints: () => get<ChangePointEvent[]>("/change-points"),
+  correlations: () => get<CorrelationsData>("/correlations"),
+  // ---- v3: release overview board + drill-down/compare ----
+  overview: () => get<OverviewData>("/overview"),
+  versionDrill: (version: string) => get<VersionDrill>(`/version-drill?version=${encodeURIComponent(version)}`),
+  versionCompare: (versions: string[]) => get<VersionCompare>(`/version-compare?versions=${versions.join(",")}`),
+  search: (q: string) => get<SearchResults>(`/search?q=${encodeURIComponent(q)}`),
+  trace: (params: {
+    run_id: number; kind: string; scope_path?: string; path_id?: number;
+    benchmark?: string; line?: number;
+  }) => {
+    const q = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== "")
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join("&");
+    return get<TraceResult>(`/trace?${q}`);
+  },
   patchFinding: (id: number, patch: { status?: string }) =>
     fetch(`${BASE}/findings/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }),
   findingFeedback: (id: number, verdict: "up" | "down", comment = "") =>

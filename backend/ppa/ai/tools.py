@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session
 
 from .. import analysis
+from .. import versioning
 from ..models import Run
 from .context_pack import build_comparison_pack, build_run_pack
 
@@ -74,7 +75,51 @@ class GetFindingsIn(BaseModel):
     run_id: int | None = None
     severity: Literal["critical", "high", "medium", "low", "info"] | None = None
     category: Literal["timing", "area", "power", "performance", "cross_domain",
-                      "data_quality"] | None = None
+                      "data_quality", "version_change"] | None = None
+
+
+class GetVersionSeriesIn(BaseModel):
+    """Ordered RTL version series with headline PPA metrics and change notes."""
+
+    op: Literal["get_version_series"] = "get_version_series"
+    metrics: list[str] = Field(
+        default_factory=list, max_length=6,
+        description="optional display keys to keep, e.g. ['area_mm2','total_power_mw']")
+
+
+class GetChangePointsIn(BaseModel):
+    """Detected version-to-version change points (step/spike/recovery/trend)."""
+
+    op: Literal["get_change_points"] = "get_change_points"
+    metric: str | None = Field(default=None,
+                                description="filter by display key, e.g. area_mm2")
+    severity: Literal["high", "medium", "low"] | None = None
+
+
+class GetCorrelationsIn(BaseModel):
+    """Pearson correlations between performance and PPA metrics across versions."""
+
+    op: Literal["get_correlations"] = "get_correlations"
+
+
+class SearchSignalsIn(BaseModel):
+    """Substring search over timing signals (slack history) and raw report text."""
+
+    op: Literal["search_signals"] = "search_signals"
+    query: str = Field(min_length=2, max_length=64,
+                       description="substring of a signal or module name, e.g. 'mac'")
+
+
+class TraceToSourceIn(BaseModel):
+    """The exact raw report lines backing one plotted value."""
+
+    op: Literal["trace_to_source"] = "trace_to_source"
+    run_id: int
+    kind: Literal["area", "power", "timing", "perf"]
+    scope_path: str | None = Field(default=None,
+                                   description="required for area/power")
+    path_id: int | None = Field(default=None, description="required for timing")
+    benchmark: str | None = Field(default=None, description="required for perf")
 
 
 class ProposeViewIn(BaseModel):
@@ -83,7 +128,7 @@ class ProposeViewIn(BaseModel):
     op: Literal["propose_view"] = "propose_view"
     view: Literal["run-explorer", "scorecard", "compare", "design-space",
                   "area", "power", "timing", "performance", "hotspot",
-                  "findings", "ingest"]
+                  "findings", "ingest", "timeline", "correlations"]
     run_id: int | None = None
     run_ids: list[int] = Field(default_factory=list, max_length=4)
 
@@ -150,6 +195,46 @@ TOOLS_SPEC = [
             "name": "get_findings",
             "description": "Abnormalities and rule-engine findings, optionally filtered.",
             "parameters": GetFindingsIn.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_version_series",
+            "description": "Ordered RTL version series: headline PPA metrics, git sha and change note per version.",
+            "parameters": GetVersionSeriesIn.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_change_points",
+            "description": "Statistically detected version-to-version change points (step/spike/recovery/trend) with module attribution and change notes.",
+            "parameters": GetChangePointsIn.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_correlations",
+            "description": "Pearson r between performance (score, IPC, Fmax) and PPA (area, power, WNS, leakage) across versions, plus per-module correlations.",
+            "parameters": GetCorrelationsIn.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_signals",
+            "description": "Search timing signals by name substring (returns slack history per version) and raw report text (file + line).",
+            "parameters": SearchSignalsIn.model_json_schema(),
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "trace_to_source",
+            "description": "Trace one plotted value back to the exact raw report lines it came from (area/power/timing/perf).",
+            "parameters": TraceToSourceIn.model_json_schema(),
         },
     },
     {
@@ -254,6 +339,57 @@ def execute_tool(session: Session, name: str, arguments: dict) -> tuple[str, lis
         for f in data[:20]:
             cite(f["run_id"], f"rule {f['rule_id']}")
         return _clip(data[:30]), citations
+
+    if name == "get_version_series":
+        args = GetVersionSeriesIn(**arguments)
+        data = versioning.version_series(session)
+        series = data["series"]
+        if args.metrics:
+            series = [{**s, "metrics": {k: s["metrics"].get(k) for k in args.metrics}}
+                      for s in series]
+        else:
+            series = [{**s, "metrics": {k: v for k, v in s["metrics"].items()
+                                        if k in ("specint_score", "area_mm2",
+                                                 "total_power_mw", "wns_ns")}}
+                      for s in series]
+        if series:
+            cite(series[0]["run_id"], "version series")
+            cite(series[-1]["run_id"], "version series")
+        return _clip({"n_versions": len(series), "series": series}), citations
+
+    if name == "get_change_points":
+        args = GetChangePointsIn(**arguments)
+        data = versioning.change_points(session)
+        if args.metric:
+            data = [e for e in data if e["metric_key"] == args.metric]
+        if args.severity:
+            data = [e for e in data if e["severity"] == args.severity]
+        for e in data[:20]:
+            cite(e["to_run_id"], f"change point {e['metric_key']}")
+        return _clip({"n_events": len(data), "events": data}), citations
+
+    if name == "get_correlations":
+        data = versioning.correlations(session)
+        cite(0, "version series")
+        return _clip(data), citations
+
+    if name == "search_signals":
+        args = SearchSignalsIn(**arguments)
+        data = versioning.signal_search(session, args.query)
+        cited: set[int] = set()
+        for sig in data["signals"][:5]:
+            if sig["history"] and sig["history"][0]["run_id"] not in cited:
+                cited.add(sig["history"][0]["run_id"])
+                cite(sig["history"][0]["run_id"], "signal search")
+        return _clip(data), citations
+
+    if name == "trace_to_source":
+        args = TraceToSourceIn(**arguments)
+        data = versioning.trace_to_source(
+            session, args.run_id, args.kind, scope_path=args.scope_path,
+            path_id=args.path_id, benchmark=args.benchmark)
+        cite(args.run_id, "raw report trace")
+        return _clip(data), citations
 
     if name == "propose_view":
         args = ProposeViewIn(**arguments)

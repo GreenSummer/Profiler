@@ -7,8 +7,8 @@ from sqlmodel import Session, select
 
 from . import metrics as M
 from .models import (
-    AreaRow, Baseline, Config, Corner, Finding, Metric, PerfRow, PowerRow,
-    Project, RawReport, Run, TimingPath,
+    AreaRow, Baseline, Config, Corner, Design, Finding, Metric, PerfRow,
+    PowerRow, Project, RawReport, Run, TimingPath,
 )
 from .rules import RunFacts
 
@@ -49,11 +49,15 @@ def list_runs(session: Session, project_id: int | None = None) -> list[dict]:
         m = _metrics(session, run.id)
         cfg = session.get(Config, run.config_id)
         corner = session.get(Corner, run.corner_id)
+        design = session.get(Design, run.design_id)
         n_findings = len(session.exec(
             select(Finding).where(Finding.run_id == run.id, Finding.status == "open")).all())
         out.append({
             "run_id": run.id, "label": run.label, "stage": run.stage,
             "started_at": run.started_at.isoformat(),
+            "version": design.version if design else "",
+            "model": design.model if design else "synth",
+            "change_note": design.change_note if design else "",
             "config": cfg.params_json if cfg else {},
             "corner": corner.name if corner else "",
             "fom": {k[len("fom."):]: v for k, v in m.items() if k.startswith("fom.")},
@@ -72,7 +76,6 @@ def scorecard(session: Session, run_id: int) -> dict:
         return {}
     m = _metrics(session, run_id)
     project = None
-    from .models import Design
     design = session.get(Design, run.design_id)
     if design:
         project = session.get(Project, design.project_id)

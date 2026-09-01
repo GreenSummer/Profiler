@@ -14,6 +14,7 @@ class AreaReportRow:
     clock_area: float
     buf_inv_area: float
     inst_count: int
+    src_line: int = 0                     # 1-based line in the report text
 
 
 @dataclass
@@ -49,6 +50,7 @@ class TimingPathRow:
     arrival_ns: float
     required_ns: float
     is_hold: bool = False
+    src_line: int = 0                     # line of the "Path N" block header
 
 
 @dataclass
@@ -90,6 +92,7 @@ class PowerReportRow:
     switching: float
     leakage: float
     total: float
+    src_line: int = 0                     # 1-based line in the report text
 
 
 @dataclass
@@ -119,6 +122,7 @@ class PerfReportRow:
     l1d_mpki: float | None = None
     l2_mpki: float | None = None
     br_mispred_pct: float | None = None
+    src_line: int = 0                     # 1-based line in the report text
 
 
 @dataclass

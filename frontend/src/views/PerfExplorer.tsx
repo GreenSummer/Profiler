@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useApp } from "../store";
 import { Card, Delta, Empty, Table, fmt } from "../components/ui";
 import { EChart } from "../components/EChart";
+import { SourceBtn } from "../components/TraceDrawer";
 
 /** green when the benchmark improved vs baseline, red when it regressed */
 const BENCH_COLOR = (d: number | null) =>
@@ -107,7 +108,7 @@ export function PerfExplorer() {
       </div>
 
       <Card title="Per-benchmark detail">
-        <Table head={["Benchmark", "IPC", "Δ IPC vs base", "Ratio @1GHz", "L1D MPKI", "L2 MPKI", "Br mispred %"]}>
+        <Table head={["Benchmark", "IPC", "Δ IPC vs base", "Ratio @1GHz", "L1D MPKI", "L2 MPKI", "Br mispred %", ""]}>
           {rows.map((r) => (
             <tr key={r.benchmark}>
               <td className="px-2 py-1 font-medium">{r.benchmark}</td>
@@ -119,6 +120,9 @@ export function PerfExplorer() {
                 {fmt(r.l2_mpki, 2)}
               </td>
               <td className="px-2 py-1 font-mono text-slate-400">{fmt(r.br_mispred_pct, 1)}</td>
+              <td className="px-2 py-1 text-right">
+                <SourceBtn target={{ run_id: runId!, kind: "perf", benchmark: r.benchmark }} />
+              </td>
             </tr>
           ))}
         </Table>

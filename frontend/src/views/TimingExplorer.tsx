@@ -3,9 +3,12 @@ import { api } from "../api";
 import { useApp } from "../store";
 import { Card, Empty, Table, fmt, shortModule } from "../components/ui";
 import { EChart, PALETTE } from "../components/EChart";
+import { SourceBtn } from "../components/TraceDrawer";
 
 export function TimingExplorer() {
   const runId = useApp((s) => s.runId);
+  const searchQuery = useApp((s) => s.searchQuery);
+  const setSearchQuery = useApp((s) => s.setSearchQuery);
   const { data, isLoading } = useQuery({
     queryKey: ["timing", runId],
     queryFn: () => api.timing(runId!),
@@ -14,6 +17,15 @@ export function TimingExplorer() {
 
   if (!runId) return <Empty />;
   if (isLoading || !data) return <Card>loading…</Card>;
+
+  // signal filter: the global search query doubles as the timing filter
+  const q = searchQuery.trim().toLowerCase();
+  const paths = q
+    ? data.paths.filter((p) =>
+        p.startpoint.toLowerCase().includes(q) ||
+        p.endpoint.toLowerCase().includes(q) ||
+        p.module.toLowerCase().includes(q))
+    : data.paths;
 
   const histOption = {
     tooltip: { trigger: "axis" as const },
@@ -80,20 +92,41 @@ export function TimingExplorer() {
         </Table>
       </Card>
 
-      <Card title="Worst setup paths">
-        <Table head={["#", "Startpoint", "Endpoint", "Group", "Slack ns", "Logic depth", "Module"]}>
-          {data.paths.slice(0, 15).map((p) => (
-            <tr key={p.path_id} className={p.slack_ns < 0 ? "bg-red-500/5" : ""}>
-              <td className="px-2 py-1 text-slate-500">{p.path_id}</td>
-              <td className="px-2 py-1 font-mono text-[10px] text-slate-400">{p.startpoint}</td>
-              <td className="px-2 py-1 font-mono text-[10px] text-slate-400">{p.endpoint}</td>
-              <td className="px-2 py-1">{p.group}</td>
-              <td className={`px-2 py-1 font-mono ${p.slack_ns < 0 ? "text-red-400" : ""}`}>{fmt(p.slack_ns, 3)}</td>
-              <td className={`px-2 py-1 font-mono ${p.logic_depth > 25 ? "text-yellow-400" : ""}`}>{p.logic_depth}</td>
-              <td className="px-2 py-1">{shortModule(p.module)}</td>
-            </tr>
-          ))}
-        </Table>
+      <Card
+        title={`Worst setup paths${q ? ` — filtered by “${searchQuery.trim()}”` : ""}`}
+        right={
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="filter signals…"
+            className="rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-[11px] text-slate-200 placeholder:text-slate-600 focus:border-sky-500/60 focus:outline-none"
+          />
+        }
+      >
+        {paths.length === 0 ? (
+          <p className="py-6 text-center text-xs text-slate-500">
+            no paths match “{searchQuery.trim()}” in this run — try the global search for a
+            slack history across versions
+          </p>
+        ) : (
+          <Table head={["#", "Startpoint", "Endpoint", "Group", "Slack ns", "Logic depth", "Module", ""]}
+          >
+            {paths.slice(0, 15).map((p) => (
+              <tr key={p.path_id} className={p.slack_ns < 0 ? "bg-red-500/5" : ""}>
+                <td className="px-2 py-1 text-slate-500">{p.path_id}</td>
+                <td className="px-2 py-1 font-mono text-[10px] text-slate-400">{p.startpoint}</td>
+                <td className="px-2 py-1 font-mono text-[10px] text-slate-400">{p.endpoint}</td>
+                <td className="px-2 py-1">{p.group}</td>
+                <td className={`px-2 py-1 font-mono ${p.slack_ns < 0 ? "text-red-400" : ""}`}>{fmt(p.slack_ns, 3)}</td>
+                <td className={`px-2 py-1 font-mono ${p.logic_depth > 25 ? "text-yellow-400" : ""}`}>{p.logic_depth}</td>
+                <td className="px-2 py-1">{shortModule(p.module)}</td>
+                <td className="px-2 py-1 text-right">
+                  <SourceBtn target={{ run_id: runId, kind: "timing", path_id: p.path_id }} />
+                </td>
+              </tr>
+            ))}
+          </Table>
+        )}
         <p className="mt-2 text-[10px] text-slate-600">
           Logic depth &gt; 25 highlighted: long combinational chains are usually a µarch structure issue (fewer, wider stages beat pipelining fixes at synthesis).
         </p>

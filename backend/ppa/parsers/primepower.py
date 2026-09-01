@@ -20,7 +20,7 @@ def parse_primepower(text: str) -> PowerReport:
     rep = PowerReport()
     in_table = False
     in_categories = False
-    for line in text.splitlines():
+    for lineno, line in enumerate(text.splitlines(), 1):
         s = line.rstrip()
         if s.startswith("Design"):
             rep.design = s.split(":", 1)[1].strip()
@@ -70,6 +70,7 @@ def parse_primepower(text: str) -> PowerReport:
                 tool_path=name, depth=depth,
                 internal=internal, switching=switching,
                 leakage=leakage, total=total,
+                src_line=lineno,
             ))
         elif toks and toks[0].lower() == "total" and len(toks) >= 5:
             internal, switching, leakage, total = [float(to_float(t)) for t in toks[-4:]]  # type: ignore[arg-type]
@@ -77,6 +78,7 @@ def parse_primepower(text: str) -> PowerReport:
                 tool_path="__total__", depth=0,
                 internal=internal, switching=switching,
                 leakage=leakage, total=total,
+                src_line=lineno,
             ))
         else:
             rep.warnings.append(f"unparsed line: {s.strip()[:80]}")

@@ -20,7 +20,7 @@ class Project(SQLModel, table=True):
     process_node: str = "N7"
     nand2_area_um2: float = 0.0594
     target_freq_mhz: float = 1000.0
-    area_budget_mm2: float | None = None
+    area_budget_mm2: float | None = 2.0
     power_budget_mw: float | None = None
     # Designer-tunable settings (regression thresholds, rule overrides, AI config)
     settings_json: dict = Field(default_factory=dict, sa_column=Column(JSON))
@@ -29,9 +29,12 @@ class Project(SQLModel, table=True):
 class Design(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id", index=True)
+    version: str = ""                      # RTL version label, e.g. "v0.4"
+    model: str = "synth"                   # provenance series: synth | gem5 | slice | zebu | fogs
     rtl_git_sha: str = "unknown"
     rtl_branch: str = "main"
     description: str = ""
+    change_note: str = ""                   # what changed vs previous version
     date: datetime = Field(default_factory=utcnow)
 
 
@@ -57,7 +60,7 @@ class Run(SQLModel, table=True):
     design_id: int = Field(foreign_key="design.id", index=True)
     config_id: int = Field(foreign_key="config.id", index=True)
     corner_id: int = Field(foreign_key="corner.id", index=True)
-    label: str = ""                      # human name, e.g. "rob128"
+    label: str = ""                      # human name, e.g. "v0.1"
     tool: str = ""                       # tool bundle that produced the reports
     tool_version: str = ""
     stage: str = "rtla_predict"          # rtla_predict | synth | place | cts | route
@@ -73,6 +76,7 @@ class RawReport(SQLModel, table=True):
     file_path: str = ""
     sha256: str = ""
     bytes: int = 0
+    content: str = ""                    # full report text (trace + search)
     parser_version: str = ""
     parse_status: str = "ok"             # ok | warnings | error
     parse_log: str = ""
@@ -103,6 +107,7 @@ class AreaRow(SQLModel, table=True):
     clock_area: float = 0.0
     buf_inv_area: float = 0.0
     inst_count: int = 0
+    src_line: int = 0                    # 1-based line in the source report
 
 
 class PowerRow(SQLModel, table=True):
@@ -115,6 +120,7 @@ class PowerRow(SQLModel, table=True):
     switching: float = 0.0
     leakage: float = 0.0
     total: float = 0.0
+    src_line: int = 0                    # 1-based line in the source report
 
 
 class TimingPath(SQLModel, table=True):
@@ -132,6 +138,7 @@ class TimingPath(SQLModel, table=True):
     end_module: str = ""
     logic_depth: int = 0
     is_hold: bool = False
+    src_line: int = 0                    # 1-based line of the "Path N" block
 
 
 class PerfRow(SQLModel, table=True):
@@ -146,9 +153,27 @@ class PerfRow(SQLModel, table=True):
     l1d_mpki: float | None = None
     l2_mpki: float | None = None
     br_mispred_pct: float | None = None
+    src_line: int = 0                    # 1-based line in the specint report
 
 
 # ---------------------------------------------------------------- analysis
+
+class ChangeEvent(SQLModel, table=True):
+    """A statistically detected change point in the version series (B4):
+    persisted output of versioning.detect_change_points."""
+    id: int | None = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="project.id", index=True)
+    from_run_id: int = Field(foreign_key="run.id", index=True)
+    to_run_id: int = Field(foreign_key="run.id", index=True)
+    metric_key: str = Field(index=True)  # e.g. "fom.area_mm2"
+    scope_path: str | None = None        # module-level change when set
+    delta_pct: float = 0.0               # (to - from) / from
+    magnitude: float = 0.0               # robust z-score (delta / MAD scale)
+    method: str = "step"                 # step | spike | trend
+    severity: str = "medium"             # critical | high | medium | low
+    note: str = ""                       # change note of the later version
+    created_at: datetime = Field(default_factory=utcnow)
+
 
 class ScopeAlias(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)

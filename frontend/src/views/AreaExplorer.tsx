@@ -4,6 +4,7 @@ import { api } from "../api";
 import { useApp } from "../store";
 import { Card, Delta, Empty, Table, fmt, shortModule } from "../components/ui";
 import { EChart } from "../components/EChart";
+import { SourceBtn } from "../components/TraceDrawer";
 import type { AreaRowX } from "../types";
 
 function buildTree(rows: AreaRowX[]) {
@@ -112,7 +113,7 @@ export function AreaExplorer() {
       </Card>
 
       <Card title={`Top level-2 modules by ${sizeBy === "area" ? "area" : "instance count"}`}>
-        <Table head={["Module", "Area µm²", "Share", "Comb", "Seq", "Macro", "Buf/Inv", "Seq%", "Δ vs base", "Cells"]}>
+        <Table head={["Module", "Area µm²", "Share", "Comb", "Seq", "Macro", "Buf/Inv", "Seq%", "Δ vs base", "Cells", ""]}>
           {top.map((r) => (
             <tr key={r.scope_path}>
               <td className="px-2 py-1 font-medium">{shortModule(r.scope_path)}</td>
@@ -125,6 +126,9 @@ export function AreaExplorer() {
               <td className={`px-2 py-1 font-mono ${r.seq_ratio > 0.5 ? "text-yellow-400" : ""}`}>{fmt(r.seq_ratio * 100, 0)}%</td>
               <td className="px-2 py-1"><Delta pct={r.delta_vs_baseline_pct !== null ? r.delta_vs_baseline_pct * 100 : null} invert /></td>
               <td className="px-2 py-1 font-mono text-slate-400">{fmt(r.inst_count, 0)}</td>
+              <td className="px-2 py-1 text-right">
+                <SourceBtn target={{ run_id: runId!, kind: "area", scope_path: r.scope_path }} />
+              </td>
             </tr>
           ))}
         </Table>

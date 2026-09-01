@@ -1,0 +1,106 @@
+************************************************************************
+Report : report_timing -summary -max_paths 200
+Design : rv_ooc_core
+Version: T-2022.03-SP4
+Date   : 2026-07-20
+************************************************************************
+Clock clk  period 1.20 ns
+
+Path Group      WNS (ns)    TNS (ns)   NVE    Fmax (MHz)
+---
+reg2reg            0.027        0.00      3        852.8
+in2reg             0.107        0.00      0        915.3
+reg2out            0.147        0.00      0        950.1
+cg_hold            0.050        0.00      0          0.0
+Total              0.027        0.00      3        852.8
+
+Setup slack histogram (ns, endpoint count)
+---
+[ -0.22]      2
+[ -0.17]      4
+[ -0.12]      9
+[ -0.07]     14
+[ -0.02]     28
+[  0.03]     41
+[  0.08]     63
+[  0.13]     95
+[  0.18]    130
+[  0.23]     88
+[  0.28]     60
+[  0.33]     37
+[  0.43]     21
+[  0.53]     12
+[  0.63]      5
+
+Top violating paths (setup, clock clk)
+---
+Path 1
+  Startpoint: core_top/u_ex/u_mul/mac_part_q_reg[11]
+  Endpoint:   core_top/u_ex/u_mul/mac_acc_q_reg[63]
+  Path Group: reg2reg
+  Logic Depth: 34
+  Slack: 0.027 ns
+  Arrival: 1.173 ns   Required: 1.200 ns
+Path 2
+  Startpoint: core_top/u_ex/u_mul/mul_start_q_reg[2]
+  Endpoint:   core_top/u_ex/u_mul/mac_part_q_reg[11]
+  Path Group: reg2reg
+  Logic Depth: 29
+  Slack: 0.044 ns
+  Arrival: 1.156 ns   Required: 1.200 ns
+Path 3
+  Startpoint: core_top/u_ex/u_mul/mac_acc_q_reg[63]
+  Endpoint:   core_top/u_ex/u_wb/wb_data_l
+  Path Group: reg2reg
+  Logic Depth: 27
+  Slack: 0.053 ns
+  Arrival: 1.147 ns   Required: 1.200 ns
+Path 4
+  Startpoint: core_top/u_ex/u_rob/u_sched/issue_rdy_q_reg[7]
+  Endpoint:   core_top/u_ex/gen_alu_0/u_alu/cmp_nxt_a
+  Path Group: reg2reg
+  Logic Depth: 34
+  Slack: 0.039 ns
+  Arrival: 1.161 ns   Required: 1.200 ns
+Path 5
+  Startpoint: core_top/u_ex/u_rob/u_sched/sel_grant_q_reg[3]
+  Endpoint:   core_top/u_ex/gen_alu_1/u_alu/cmp_nxt_b
+  Path Group: reg2reg
+  Logic Depth: 31
+  Slack: 0.039 ns
+  Arrival: 1.161 ns   Required: 1.200 ns
+Path 6
+  Startpoint: core_top/u_ex/u_lsq/u_wakeup/cam_hit_q_reg[11]
+  Endpoint:   core_top/u_ex/u_lsq/u_wakeup/load_wakeup_l
+  Path Group: reg2reg
+  Logic Depth: 29
+  Slack: 0.048 ns
+  Arrival: 1.152 ns   Required: 1.200 ns
+Path 7
+  Startpoint: core_top/u_ifu/u_bp/btb_hit_q_reg[5]
+  Endpoint:   core_top/u_ifu/u_dec/u_rename/dest_map_q_reg[19]
+  Path Group: reg2reg
+  Logic Depth: 27
+  Slack: 0.060 ns
+  Arrival: 1.140 ns   Required: 1.200 ns
+Path 8
+  Startpoint: core_top/u_lsu/u_dtlb/pte_tag_q_reg[2]
+  Endpoint:   core_top/u_lsu/u_wb/wb_arb_grant_l
+  Path Group: reg2reg
+  Logic Depth: 25
+  Slack: 0.071 ns
+  Arrival: 1.129 ns   Required: 1.200 ns
+Path 9
+  Startpoint: core_top/u_ifu/u_dec/u_scan/insn_buf_q_reg[8]
+  Endpoint:   core_top/u_ifu/u_dec/u_scan/u_deco/illegal_insn
+  Path Group: reg2reg
+  Logic Depth: 22
+  Slack: 0.085 ns
+  Arrival: 1.115 ns   Required: 1.200 ns
+Path 10
+  Startpoint: core_top/u_l2/u_adapt/rsp_buf_q_reg[4]
+  Endpoint:   core_top/u_l2/u_adapt/req_issue_l
+  Path Group: reg2reg
+  Logic Depth: 20
+  Slack: 0.098 ns
+  Arrival: 1.102 ns   Required: 1.200 ns

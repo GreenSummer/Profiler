@@ -12,7 +12,7 @@ from . import metrics as M
 from .canonicalize import canonicalize_path, depth_of, owner_module, parent_of
 from .models import (
     AreaRow, Baseline, Config, Corner, Design, Finding, Metric, PerfRow,
-    PowerRow, Project, RawReport, Run, ScopeAlias, TimingPath,
+    PowerRow, Project, RawReport, Run, ScopeAlias, TimingPath, utcnow,
 )
 from .parsers import primepower as pp_parser
 from .parsers import rtla as rtla_parser
@@ -61,6 +61,10 @@ def _reconstruct_total(rows: list[tuple[str, AreaReportRow]]) -> AreaReportRow |
 def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
                design: Design, corner: Corner) -> Run:
     label = entry.get("label", run_dir.name)
+    model = entry.get("model", "synth")
+    # perf-model runs only carry a specint report; missing synth reports
+    # are expected there, not a data-quality error
+    applicable = set(REPORT_SPECS[4:] if model != "synth" else REPORT_SPECS)
     # config (get or create by name for this design)
     cfg = session.exec(
         select(Config).where(Config.design_id == design.id, Config.name == label)
@@ -72,9 +76,9 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
 
     run = Run(
         design_id=design.id, config_id=cfg.id, corner_id=corner.id,
-        label=label, tool="rtla+primepower+perfsim",
+        label=label, tool="rtla+primepower+perfsim" if model == "synth" else model,
         tool_version="T-2022.03-SP4/P-2019.06-SP1",
-        stage=entry.get("stage", "rtla_predict"),
+        stage=entry.get("stage", "synth"),
         workdir_path=str(run_dir),
     )
     session.add(run)
@@ -91,6 +95,8 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
     parsed: dict[str, object] = {}
 
     for kind, fname, fn, pver in REPORT_SPECS:
+        if (kind, fname) not in {(k, f) for k, f, _, _ in applicable}:
+            continue
         f = run_dir / fname
         if not f.exists():
             session.add(RawReport(run_id=run.id, kind=kind, file_path=str(f),
@@ -104,11 +110,13 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
         except Exception as e:  # noqa: BLE001 — keep ingesting other reports
             session.add(RawReport(run_id=run.id, kind=kind, file_path=str(f),
                                   sha256=_sha256(f), bytes=f.stat().st_size,
+                                  content=text,
                                   parser_version=pver, parse_status="error",
                                   parse_log=str(e)))
             continue
         session.add(RawReport(run_id=run.id, kind=kind, file_path=str(f),
                               sha256=_sha256(f), bytes=f.stat().st_size,
+                              content=text,
                               parser_version=pver, parse_status=status, parse_log=log))
         parsed[kind] = rep
 
@@ -122,7 +130,7 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
                 depth=depth_of(cpath), total_area=row.comb_area + row.seq_area + row.macro_area + row.clock_area + row.buf_inv_area,
                 comb_area=row.comb_area, seq_area=row.seq_area, macro_area=row.macro_area,
                 clock_area=row.clock_area, buf_inv_area=row.buf_inv_area,
-                inst_count=row.inst_count,
+                inst_count=row.inst_count, src_line=row.src_line,
             ))
             alias_rows.append(ScopeAlias(run_id=run.id, tool_path=path, canonical_path=cpath))
 
@@ -136,7 +144,7 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
             power_rows.append(PowerRow(
                 run_id=run.id, scope_path=cpath, parent_path=parent_of(cpath),
                 depth=depth_of(cpath), internal=row.internal, switching=row.switching,
-                leakage=row.leakage, total=row.total,
+                leakage=row.leakage, total=row.total, src_line=row.src_line,
             ))
             alias_rows.append(ScopeAlias(run_id=run.id, tool_path=row.tool_path, canonical_path=cpath))
 
@@ -149,7 +157,7 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
                 slack_ns=p.slack_ns, required_ns=p.required_ns, arrival_ns=p.arrival_ns,
                 startpoint=p.startpoint, endpoint=p.endpoint,
                 start_module=owner_module(sp, ep), end_module=owner_module(sp, ep),
-                logic_depth=p.logic_depth, is_hold=p.is_hold,
+                logic_depth=p.logic_depth, is_hold=p.is_hold, src_line=p.src_line,
             ))
 
     # ---- performance
@@ -159,7 +167,7 @@ def ingest_run(session: Session, run_dir: Path, entry: dict, project: Project,
                 run_id=run.id, benchmark=r.benchmark, ref_ipc=r.ref_ipc,
                 cycles_m=r.cycles_m, inst_m=r.inst_m, ipc=r.ipc,
                 ratio_1ghz=r.ratio_1ghz, l1d_mpki=r.l1d_mpki, l2_mpki=r.l2_mpki,
-                br_mispred_pct=r.br_mispred_pct,
+                br_mispred_pct=r.br_mispred_pct, src_line=r.src_line,
             ))
 
     # ---- qor raw metrics
@@ -264,6 +272,41 @@ def _power_summary(parsed: dict, rows: list[PowerRow]) -> M.PowerSummary:
                              clock_gating_eff=rep.clock_gating_efficiency)
 
 
+def _design_for_entry(session: Session, project: Project, entry: dict) -> Design:
+    """v2 manifests carry one RTL version per entry; v1 manifests share one
+    design for the whole sweep. v3 manifests add a provenance model
+    (synth | gem5 | slice | zebu | fogs): one design per (version, model)."""
+    version = entry.get("version")
+    if version:
+        model = entry.get("model", "synth")
+        design = session.exec(
+            select(Design).where(Design.project_id == project.id,
+                                  Design.version == version,
+                                  Design.model == model)
+        ).first()
+        if design is None:
+            from datetime import datetime
+            date = entry.get("date")
+            design = Design(
+                project_id=project.id, version=version, model=model,
+                rtl_git_sha=entry.get("sha", "unknown"),
+                rtl_branch=entry.get("branch", "main"),
+                description=entry.get("description", ""),
+                change_note=entry.get("change_note", ""),
+                date=datetime.fromisoformat(date) if date else utcnow(),
+            )
+            session.add(design)
+            session.flush()
+        return design
+    design = session.exec(select(Design).where(Design.project_id == project.id)).first()
+    if design is None:
+        design = Design(project_id=project.id, rtl_git_sha="a1b2c3d",
+                        rtl_branch="main", description="rv_ooc_core demo sweep")
+        session.add(design)
+        session.flush()
+    return design
+
+
 def ingest_directory(session: Session, root: Path, project_name: str = "riscv-demo") -> dict:
     """Ingest every run directory listed in manifest.json."""
     manifest_path = root / "manifest.json"
@@ -276,14 +319,9 @@ def ingest_directory(session: Session, root: Path, project_name: str = "riscv-de
     if project is None:
         project = Project(name=project_name, process_node="N7",
                           nand2_area_um2=0.0594, target_freq_mhz=833.0,
-                          area_budget_mm2=0.60, power_budget_mw=150.0)
+                          area_budget_mm2=2.0, power_budget_mw=150.0,
+                          settings_json={"target_geomean": 1.45})
         session.add(project)
-        session.flush()
-    design = session.exec(select(Design).where(Design.project_id == project.id)).first()
-    if design is None:
-        design = Design(project_id=project.id, rtl_git_sha="a1b2c3d",
-                        rtl_branch="main", description="rv_ooc_core demo sweep")
-        session.add(design)
         session.flush()
     corner = session.exec(select(Corner).where(Corner.name == "tt_0p80v_25c")).first()
     if corner is None:
@@ -296,6 +334,7 @@ def ingest_directory(session: Session, root: Path, project_name: str = "riscv-de
         rd = root / entry["label"]
         if not rd.is_dir():
             continue
+        design = _design_for_entry(session, project, entry)
         run = ingest_run(session, rd, entry, project, design, corner)
         run_ids.append(run.id)
 
@@ -308,4 +347,8 @@ def ingest_directory(session: Session, root: Path, project_name: str = "riscv-de
 
     # rule engine over all runs (needs baseline context)
     findings = run_rule_engine(session, project.id)
-    return {"project_id": project.id, "runs": run_ids, "findings": len(findings)}
+    # statistical change-point detection over the version series (B4)
+    from .versioning import refresh_change_events
+    change_events = refresh_change_events(session, project.id)
+    return {"project_id": project.id, "runs": run_ids, "findings": len(findings),
+            "change_events": len(change_events)}
