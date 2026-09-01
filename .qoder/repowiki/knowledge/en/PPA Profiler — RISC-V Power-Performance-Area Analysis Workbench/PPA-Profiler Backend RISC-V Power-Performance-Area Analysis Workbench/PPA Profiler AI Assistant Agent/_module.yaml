@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: backend/ai_agent
+title: PPA Profiler AI Assistant Agent
+scope:
+    - backend/ppa/ai/
+source_files: []
+depends_on: []
+related_to: []

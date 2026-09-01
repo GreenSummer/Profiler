@@ -1,0 +1,1 @@
+Vite dev server runs on port 5173 and proxies all `/api/*` requests to `http://127.0.0.1:8000` (the backend) via `server.proxy`, so the frontend must be started alongside the Python backend for data fetching to work.

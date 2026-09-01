@@ -1,0 +1,1 @@
+Python with Pydantic v2 for tool parameter validation, httpx for OpenAI-compatible HTTP calls to local Ollama/vLLM endpoints, and SQLModel sessions for read access to ingested runs.

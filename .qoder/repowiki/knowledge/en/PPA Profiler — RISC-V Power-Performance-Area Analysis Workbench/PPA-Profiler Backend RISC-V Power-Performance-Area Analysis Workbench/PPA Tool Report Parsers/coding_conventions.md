@@ -1,0 +1,6 @@
+- Each parser exports a single `parse_<tool>(text: str)` function that returns a typed report from `base.py` and raises a `ParseError` when no valid rows are found.
+- Reports carry a `warnings: list[str]` field populated with `unparsed line:` entries for lines that do not match any expected pattern, allowing partial parses to surface issues without aborting.
+- Hierarchical rows derive depth from indentation via `depth = indent // 2` and use a sentinel `tool_path="__total__"` for the total row instead of relying on a special marker name.
+- Numeric fields are parsed through the shared `to_float` helper, which strips commas and returns `None` on failure, enabling tolerant handling of formatted numbers like `12,345.6`.
+- Line processing uses a state-machine style loop over `text.splitlines()` with boolean flags (e.g. `in_table`, `in_categories`) toggled by sentinel lines such as `---`, `=`, or section headers.
+- Tool-specific parsers import `ParseError` from `.rtla` rather than defining their own exception class, centralizing error semantics across parsers.

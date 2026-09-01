@@ -1,0 +1,3 @@
+- Report formats are expressed as typed dataclasses defined in each parser and consumed uniformly by the ingestion pipeline rather than passed as raw dicts.
+- Cross-cutting state (database connection, config, metrics) is accessed through module-level singletons initialized at application startup instead of being threaded through function arguments.
+- External behavior is parameterized via YAML configuration files (e.g. `rules_pack.yaml`) loaded at runtime rather than hard-coded constants.

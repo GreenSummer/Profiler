@@ -1,0 +1,1 @@
+`python -m ppa` or `python backend/ppa/cli.py` boots the FastAPI server; `python -m ppa ingest <report>` runs the CLI ingestion path against parser implementations.

@@ -1,0 +1,1 @@
+Pure Python stdlib — `dataclasses` for report schemas, `re` for timing-section parsing, no external dependencies.

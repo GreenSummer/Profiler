@@ -1,0 +1,1 @@
+Archived post-layout PPA (power, timing, area, QoR) report artifacts for a parameter sweep of the rv_ooc_core CPU across multiple ROB, cache, branch predictor, and voltage-corner configurations.

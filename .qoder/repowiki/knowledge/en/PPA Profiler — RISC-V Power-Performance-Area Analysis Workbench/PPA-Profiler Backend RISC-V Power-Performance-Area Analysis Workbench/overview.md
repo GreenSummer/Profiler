@@ -1,0 +1,1 @@
+FastAPI backend that ingests EDA tool reports via pluggable parsers, persists them in SQLite, runs a deterministic rule-based diagnosis engine, and exposes analysis views plus an AI chat assistant over precomputed context packs.

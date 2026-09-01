@@ -1,0 +1,1 @@
+Run the backend (`python -m ppa.cli`) to serve both the API and, if present, the built frontend at `/`; build the frontend with `vite build` so the backend can mount it statically, or run the dev server separately against the backend's `/api` endpoints.

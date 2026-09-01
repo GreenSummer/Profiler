@@ -1,0 +1,1 @@
+Text-report parsers that convert EDA tool outputs (RTLA area/timing/QOR, PrimePower hierarchical power, SPECint benchmarks) into typed dataclass reports for ingestion.

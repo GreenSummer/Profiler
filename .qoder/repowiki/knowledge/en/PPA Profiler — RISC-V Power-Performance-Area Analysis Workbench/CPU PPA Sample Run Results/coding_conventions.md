@@ -1,0 +1,3 @@
+- Each configuration variant lives in its own named subdirectory whose name matches the 'label' field in manifest.json.
+- Every variant directory contains the same fixed set of five report files (primepower.rpt, rtla_area.rpt, rtla_qor.rpt, rtla_timing.rpt, specint.rpt) so cross-run comparisons use a uniform schema.
+- Variants differ only by changing one or two parameters in the manifest (e.g. rob_entries, issue_width, l1d_kb, l2_kb, btac_entries, clock_gating, vt_mix) while keeping corner and stage constant.

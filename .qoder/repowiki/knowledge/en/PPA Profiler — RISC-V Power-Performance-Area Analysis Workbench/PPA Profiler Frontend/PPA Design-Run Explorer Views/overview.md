@@ -1,0 +1,1 @@
+React view components that present PPA (Power, Performance, Area) design-run data as tables, KPIs, charts, and explorers for runs, area, power, timing, scorecards, design-space tradeoffs, and multi-run comparisons.

@@ -1,0 +1,1 @@
+Synopsys Design Compiler / RTLA reports (T-2022.03-SP4) targeting the rv_ooc_core RISC-V out-of-order core; results captured under the tt_0p80v_25c process/voltage/temperature corner.

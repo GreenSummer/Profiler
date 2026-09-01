@@ -1,0 +1,1 @@
+On-prem RISC-V PPA analysis assistant that drives an OpenAI-compatible LLM through a typed, deterministic tool layer over precomputed context packs and the analysis engine.

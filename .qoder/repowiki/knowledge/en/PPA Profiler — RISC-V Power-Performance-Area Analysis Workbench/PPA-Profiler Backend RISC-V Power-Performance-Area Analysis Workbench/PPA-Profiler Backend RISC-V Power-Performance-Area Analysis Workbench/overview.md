@@ -1,0 +1,1 @@
+FastAPI backend that ingests RTLA/PrimePower/SPECint reports into SQLite, runs a deterministic rule-based diagnosis engine, and exposes analysis views plus an AI chat assistant for RISC-V processor PPA exploration.

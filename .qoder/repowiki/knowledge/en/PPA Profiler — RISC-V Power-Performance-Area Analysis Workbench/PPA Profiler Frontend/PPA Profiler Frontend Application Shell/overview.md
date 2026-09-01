@@ -1,0 +1,1 @@
+React/Vite application shell that bootstraps the PPA-Profiler UI, provides global state, navigation, and a typed API client for RISC-V power/area/timing/performance analysis views.

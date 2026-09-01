@@ -1,0 +1,1 @@
+Requires a running local LLM endpoint at `settings.ai_base_url` (default Ollama `/v1`) with a pulled model matching `settings.ai_model`; without it the agent automatically falls back to the deterministic offline analyst. The fallback instructs users to start Ollama via `ollama serve` + `ollama pull <model>`.

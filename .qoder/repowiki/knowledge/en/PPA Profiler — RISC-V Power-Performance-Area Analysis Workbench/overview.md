@@ -1,0 +1,1 @@
+Full-stack workbench that ingests EDA reports into a SQLite-backed FastAPI backend and serves them through a Vite/React frontend, with an optional AI chat over precomputed analysis context.

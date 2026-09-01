@@ -1,0 +1,1 @@
+React + TypeScript with Vite as the build tool; shared state via a local store module and a generated typed API client targeting the backend REST service.

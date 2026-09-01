@@ -1,0 +1,1 @@
+Each parser module declares a `VERSION` string (e.g. `rtla-0.1`, `pp-0.1`, `specint-0.1`) used to tag parsed output; real-world report formats may require column-position tweaks as noted in each module's CAVEAT comments.

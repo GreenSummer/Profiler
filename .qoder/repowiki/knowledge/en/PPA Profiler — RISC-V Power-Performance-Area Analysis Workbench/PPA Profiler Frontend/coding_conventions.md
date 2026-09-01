@@ -1,0 +1,2 @@
+- View components are organized per feature area under `src/views/` and import shared types from `src/types.ts` rather than redefining them locally.
+- All backend communication goes through the centralized `api.ts` client instead of ad-hoc fetch calls inside views.

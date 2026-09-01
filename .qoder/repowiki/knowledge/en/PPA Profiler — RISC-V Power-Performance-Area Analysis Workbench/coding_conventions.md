@@ -1,0 +1,3 @@
+- All cross-layer data exchange goes through the `/api/*` REST endpoints declared in `backend/ppa/main.py`, which the frontend consumes via the centralized `api.*` client in `frontend/src/api.ts`.
+- Database access in API handlers uses a `Session` injected via the `session_dep()` FastAPI dependency rather than global state.
+- New analysis views are added as functions in `ppa/analysis.py` and exposed as new `@app.get('/api/...')` routes without modifying shared infrastructure.

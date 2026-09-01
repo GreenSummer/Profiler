@@ -1,0 +1,6 @@
+- Data loading uses `useQuery` with a tuple query key that includes the selected `runId` so each view caches per-run data independently.
+- Views gate data fetching with `enabled: !!runId` and render an `<Empty />` placeholder when no run is selected before showing a loading card or content.
+- Cross-view selection state (current run, baseline, comparison set, active view) is accessed exclusively through `useApp()` selectors rather than props drilling.
+- Numeric values are formatted with the shared `fmt(value, digits)` helper and deltas vs baseline are shown via the `<Delta pct=... invert={...} />` component.
+- Tables are built by mapping over arrays of rows into `<Table head={[...]>` elements, with conditional color classes applied to cells based on thresholds (e.g. negative slack → red, high leakage share → yellow).
+- ECharts options are defined inline as plain JS objects inside the component and passed to `<EChart option={...} height={...} />`, using the shared `PALETTE.good/bad/neutral` colors for consistent semantic coloring.

@@ -1,0 +1,1 @@
+Vite/React application that renders PPA (Power, Performance, Area) design-run analysis views backed by a typed API client and shared global store.

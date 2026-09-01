@@ -24,7 +24,9 @@ yarn-error.log*
 .DS_Store
 
 # ---- IDE / editor ----
-.qoder/
+# .qoder: ignore caches, but track the generated repowiki
+.qoder/*
+!.qoder/repowiki/
 .idea/
 .vscode/
 *.swp

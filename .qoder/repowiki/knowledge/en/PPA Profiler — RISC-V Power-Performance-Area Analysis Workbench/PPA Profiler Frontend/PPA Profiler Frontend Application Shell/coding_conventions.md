@@ -1,0 +1,5 @@
+- View routing is driven by a central `NAV` array of `{id, label, group}` entries that both populate the sidebar and feed the `CurrentView` switch dispatcher, keeping navigation declarative.
+- All server communication goes through the typed `api` namespace in `api.ts`, which wraps `fetch` with generic `get<T>` / `post<T>` helpers that throw on non-OK responses.
+- Global UI state is kept in a single Zustand store (`store.ts`) and every mutating action calls `writeUrl` to sync the relevant fields into the URL hash for bookmarkability.
+- Server response shapes are declared as TypeScript interfaces in `types.ts` and imported at call sites rather than redefined inline, ensuring end-to-end type safety across views.
+- Data fetching in components uses TanStack Query's `useQuery` with stable string query keys (e.g. `['runs']`, `['ai-status']`) instead of ad-hoc fetch calls.

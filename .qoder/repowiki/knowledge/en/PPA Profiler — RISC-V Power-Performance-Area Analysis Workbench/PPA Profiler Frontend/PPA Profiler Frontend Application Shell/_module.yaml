@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: frontend/app_shell
+title: PPA Profiler Frontend Application Shell
+scope:
+    - frontend/src/
+    - frontend/index.html
+    - frontend/vite.config.ts
+source_files: []
+depends_on: []
+related_to: []

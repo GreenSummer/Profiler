@@ -1,0 +1,1 @@
+React + TypeScript with @tanstack/react-query for server-state caching, ECharts (via `EChart` wrapper) for treemap/scatter/parallel/stacked bar visualizations, and Tailwind CSS utility classes for layout/styling.

@@ -1,0 +1,1 @@
+React 18 + TypeScript, Vite with `@vitejs/plugin-react` and `@tailwindcss/vite` for styling, Zustand for client state, TanStack Query for server-state caching, Tailwind CSS utility classes throughout the UI.

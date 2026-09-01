@@ -1,0 +1,1 @@
+Run definitions are declared declaratively in sample_runs/manifest.json; adding a new configuration requires appending an entry with label, params, corner, stage, and order, then regenerating the five report files into a matching subdirectory.

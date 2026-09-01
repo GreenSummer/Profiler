@@ -1,0 +1,6 @@
+- Each tool is declared as a Pydantic `BaseModel` with a literal `op` field and exposed to the LLM via a `TOOLS_SPEC` entry whose parameters are derived from `model_json_schema()`.
+- Tool implementations validate inputs by instantiating their corresponding Pydantic model inside `execute_tool`, then delegate all data fetching to the `analysis` package — no direct SQL or arithmetic in tools.
+- Every tool result is JSON-clipped by `_clip` to a fixed byte budget before being returned to the LLM, keeping tool responses within token limits.
+- Citations are attached per tool call via a local `cite(run_id, source)` helper so every factual claim can be traced back to its run and source type.
+- LLM unavailability is handled uniformly by catching `llm.LLMUnavailable` and routing to the deterministic `offline_answer` fallback rather than raising errors to callers.
+- Context packs build compact, rounded summaries of analysis results instead of passing raw query outputs, enforcing that the LLM only reads precomputed facts.

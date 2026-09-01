@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: frontend/views
+title: PPA Design-Run Explorer Views
+scope:
+    - frontend/src/views/
+source_files: []
+depends_on: []
+related_to:
+    - path: backend

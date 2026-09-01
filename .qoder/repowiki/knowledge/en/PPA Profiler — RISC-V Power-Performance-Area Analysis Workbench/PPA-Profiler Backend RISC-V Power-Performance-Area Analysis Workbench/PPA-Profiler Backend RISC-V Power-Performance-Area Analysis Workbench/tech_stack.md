@@ -1,0 +1,1 @@
+FastAPI + Uvicorn for the HTTP server; SQLModel/SQLAlchemy with SQLite for persistence; Pydantic Settings (`BaseSettings` with `PPA_` env prefix) for configuration; Typer + Rich for the CLI; PyYAML for rule packs; OpenAI-compatible client (Ollama or vLLM) for the LLM agent; dataclass-based parser contracts in `parsers/base.py`.

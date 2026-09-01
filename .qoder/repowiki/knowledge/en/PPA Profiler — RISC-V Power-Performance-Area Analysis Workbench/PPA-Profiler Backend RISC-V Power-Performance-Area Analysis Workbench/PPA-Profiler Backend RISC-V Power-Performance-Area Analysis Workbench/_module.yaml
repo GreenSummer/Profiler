@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: backend/pipeline_core
+title: 'PPA-Profiler Backend: RISC-V Power-Performance-Area Analysis Workbench'
+scope:
+    - backend/ppa/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,1 @@
+FastAPI + SQLModel/SQLite for the backend; Vite + React + TypeScript for the frontend; both share the `/api/*` REST contract defined in `backend/ppa/main.py` and consumed by `frontend/src/api.ts`.

@@ -1,0 +1,1 @@
+Python FastAPI server with Pydantic models, SQLite (via SQLAlchemy-style access in `db.py`), OpenAI-compatible LLM client for the AI assistant, and YAML-driven rule configuration (`rules_pack.yaml`).
