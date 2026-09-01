@@ -23,7 +23,11 @@ export function RunExplorer() {
   const [asc, setAsc] = useState(true);
 
   if (isLoading) return <Card>loading…</Card>;
-  const rows = [...(runs ?? [])].sort((a, b) => {
+  // the runs table shows the full-synth series only; the gem5/slice/zebu/fogs
+  // perf-model runs feed the Release Overview Board below instead
+  const rows = [...(runs ?? [])]
+    .filter((r) => (r.model ?? "synth") === "synth")
+    .sort((a, b) => {
     const va = sortKey === "run_id" ? a.run_id : Number(a.fom[sortKey] ?? a.timing?.[sortKey as keyof typeof a.timing] ?? 0);
     const vb = sortKey === "run_id" ? b.run_id : Number(b.fom[sortKey] ?? b.timing?.[sortKey as keyof typeof b.timing] ?? 0);
     return asc ? va - vb : vb - va;
